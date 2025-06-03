@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/base}">
+<head>
+    <title th:text="${user.username} + ' - Détails Utilisateur - eBanca Admin'">
+        Détails Utilisateur - eBanca Admin
+    </title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-user me-2"></i>
+                <span th:text="${user.firstName + ' ' + user.lastName}">Nom de l'utilisateur</span>
+            </h1>
+            <div class="d-flex gap-2">
+                <a th:href="@{/admin/users/{id}/edit(id=${user.id})}" class="btn btn-primary">
+                    <i class="fas fa-edit me-2"></i>Modifier
+                </a>
+                <a th:href="@{/admin/users}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                </a>
+            </div>
+        </div>
+
+        <!-- User Information -->
+        <div class="row">
+            <!-- Personal Information -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-user-circle me-2"></i>Informations Personnelles
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Nom d'utilisateur</label>
+                            <p class="mb-0" th:text="${user.username}">username</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Email</label>
+                            <p class="mb-0" th:text="${user.email}">email</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Téléphone</label>
+                            <p class="mb-0" th:text="${user.phone ?: 'Non renseigné'}">phone</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Adresse</label>
+                            <p class="mb-0" th:text="${user.address ?: 'Non renseignée'}">address</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Date de création</label>
+                            <p class="mb-0" th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm')}">date</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Information -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-shield-alt me-2"></i>Informations de Sécurité
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Rôle</label>
+                            <p class="mb-0">
+                                <span th:class="${'badge bg-' + (user.role == T(com.ebanca.model.User.Role).ADMIN ? 'danger' : 'primary')}"
+                                      th:text="${user.role}">
+                                    role
+                                </span>
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Statut</label>
+                            <p class="mb-0">
+                                <span th:class="${'badge bg-' + 
+                                    (user.status == T(com.ebanca.model.User.Status).ACTIVE ? 'success' : 
+                                     user.status == T(com.ebanca.model.User.Status).INACTIVE ? 'warning' : 
+                                     user.status == T(com.ebanca.model.User.Status).LOCKED ? 'danger' : 'secondary')}"
+                                      th:text="${user.status}">
+                                    status
+                                </span>
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Dernière connexion</label>
+                            <p class="mb-0" th:text="${user.lastLoginDate ? #temporals.format(user.lastLoginDate, 'dd/MM/yyyy HH:mm') : 'Jamais'}">
+                                last login
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Tentatives de connexion</label>
+                            <p class="mb-0" th:text="${user.loginAttempts}">attempts</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Summary -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-wallet me-2"></i>Résumé des Comptes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Nombre de comptes</label>
+                            <p class="mb-0" th:text="${accounts.size()}">0</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Solde total</label>
+                            <p class="mb-0" th:text="${#numbers.formatDecimal(totalBalance, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Prêts actifs</label>
+                            <p class="mb-0" th:text="${activeLoans.size()}">0</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Montant total des prêts</label>
+                            <p class="mb-0" th:text="${#numbers.formatDecimal(totalLoans, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accounts -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-wallet me-2"></i>Comptes
+                </h5>
+                <a th:href="@{/admin/accounts/create(userId=${user.id})}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus me-2"></i>Nouveau Compte
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Numéro</th>
+                                <th>Type</th>
+                                <th>Solde</th>
+                                <th>Statut</th>
+                                <th>Date de création</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="account : ${accounts}">
+                                <td th:text="${account.accountNumber}">number</td>
+                                <td>
+                                    <span th:class="${'badge bg-' + 
+                                        (account.type == T(com.ebanca.model.Account.Type).CHECKING ? 'primary' : 
+                                         account.type == T(com.ebanca.model.Account.Type).SAVINGS ? 'success' : 'info')}"
+                                          th:text="${account.type}">
+                                        type
+                                    </span>
+                                </td>
+                                <td th:text="${#numbers.formatDecimal(account.balance, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</td>
+                                <td>
+                                    <span th:class="${'badge bg-' + 
+                                        (account.status == T(com.ebanca.model.Account.Status).ACTIVE ? 'success' : 
+                                         account.status == T(com.ebanca.model.Account.Status).FROZEN ? 'warning' : 'danger')}"
+                                          th:text="${account.status}">
+                                        status
+                                    </span>
+                                </td>
+                                <td th:text="${#temporals.format(account.createdAt, 'dd/MM/yyyy')}">date</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a th:href="@{/admin/accounts/{id}(id=${account.id})}" 
+                                           class="btn btn-sm btn-outline-primary"
+                                           data-bs-toggle="tooltip"
+                                           title="Voir détails">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a th:href="@{/admin/accounts/{id}/edit(id=${account.id})}" 
+                                           class="btn btn-sm btn-outline-secondary"
+                                           data-bs-toggle="tooltip"
+                                           title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(accounts)}">
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="fas fa-wallet fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted mb-0">Aucun compte trouvé</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exchange-alt me-2"></i>Transactions Récentes
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Montant</th>
+                                <th>Compte</th>
+                                <th>Description</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="transaction : ${recentTransactions}">
+                                <td th:text="${#temporals.format(transaction.createdAt, 'dd/MM/yyyy HH:mm')}">date</td>
+                                <td>
+                                    <span th:class="${'badge bg-' + 
+                                        (transaction.type == T(com.ebanca.model.Transaction.Type).DEPOSIT ? 'success' : 
+                                         transaction.type == T(com.ebanca.model.Transaction.Type).WITHDRAWAL ? 'danger' : 
+                                         transaction.type == T(com.ebanca.model.Transaction.Type).TRANSFER ? 'info' : 'secondary')}"
+                                          th:text="${transaction.type}">
+                                        type
+                                    </span>
+                                </td>
+                                <td th:text="${#numbers.formatDecimal(transaction.amount, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</td>
+                                <td th:text="${transaction.account.accountNumber}">account</td>
+                                <td th:text="${transaction.description}">description</td>
+                                <td>
+                                    <span th:class="${'badge bg-' + 
+                                        (transaction.status == T(com.ebanca.model.Transaction.Status).COMPLETED ? 'success' : 
+                                         transaction.status == T(com.ebanca.model.Transaction.Status).PENDING ? 'warning' : 'danger')}"
+                                          th:text="${transaction.status}">
+                                        status
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(recentTransactions)}">
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="fas fa-exchange-alt fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted mb-0">Aucune transaction récente</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-end mt-3">
+                    <a th:href="@{/admin/transactions(userId=${user.id})}" class="btn btn-outline-primary btn-sm">
+                        Voir toutes les transactions
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Loans -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-hand-holding-usd me-2"></i>Prêts Actifs
+                </h5>
+                <a th:href="@{/admin/loans/create(userId=${user.id})}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus me-2"></i>Nouveau Prêt
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Numéro</th>
+                                <th>Montant</th>
+                                <th>Durée</th>
+                                <th>Taux</th>
+                                <th>Reste à payer</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="loan : ${activeLoans}">
+                                <td th:text="${loan.loanNumber}">number</td>
+                                <td th:text="${#numbers.formatDecimal(loan.amount, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</td>
+                                <td th:text="${loan.termMonths + ' mois'}">term</td>
+                                <td th:text="${#numbers.formatDecimal(loan.interestRate, 1, 'COMMA', 2, 'POINT') + '%'}">0.00%</td>
+                                <td th:text="${#numbers.formatDecimal(loan.remainingBalance, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</td>
+                                <td>
+                                    <span th:class="${'badge bg-' + 
+                                        (loan.status == T(com.ebanca.model.Loan.Status).ACTIVE ? 'success' : 
+                                         loan.status == T(com.ebanca.model.Loan.Status).PENDING ? 'warning' : 
+                                         loan.status == T(com.ebanca.model.Loan.Status).DEFAULTED ? 'danger' : 'secondary')}"
+                                          th:text="${loan.status}">
+                                        status
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a th:href="@{/admin/loans/{id}(id=${loan.id})}" 
+                                           class="btn btn-sm btn-outline-primary"
+                                           data-bs-toggle="tooltip"
+                                           title="Voir détails">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button th:if="${loan.status == T(com.ebanca.model.Loan.Status).PENDING}"
+                                                th:data-href="@{/admin/loans/{id}/approve(id=${loan.id})}"
+                                                class="btn btn-sm btn-outline-success btn-approve-loan"
+                                                data-bs-toggle="tooltip"
+                                                title="Approuver">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button th:if="${loan.status == T(com.ebanca.model.Loan.Status).PENDING}"
+                                                th:data-href="@{/admin/loans/{id}/reject(id=${loan.id})}"
+                                                class="btn btn-sm btn-outline-danger btn-reject-loan"
+                                                data-bs-toggle="tooltip"
+                                                title="Rejeter">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(activeLoans)}">
+                                <td colspan="7" class="text-center py-4">
+                                    <i class="fas fa-hand-holding-usd fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted mb-0">Aucun prêt actif</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-end mt-3">
+                    <a th:href="@{/admin/loans(userId=${user.id})}" class="btn btn-outline-primary btn-sm">
+                        Voir tous les prêts
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional JavaScript -->
+    <th:block layout:fragment="additionalJs">
+        <script th:inline="javascript">
+            // Handle loan approval/rejection
+            document.querySelectorAll('.btn-approve-loan, .btn-reject-loan').forEach(button => {
+                button.addEventListener('click', function() {
+                    const url = this.dataset.href;
+                    const action = this.classList.contains('btn-approve-loan') ? 'approuver' : 'rejeter';
+                    
+                    if (confirm(`Êtes-vous sûr de vouloir ${action} ce prêt ?`)) {
+                        showLoading();
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            hideLoading();
+                            if (data.success) {
+                                showAlert('success', data.message);
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                showAlert('danger', data.message);
+                            }
+                        })
+                        .catch(error => {
+                            hideLoading();
+                            showAlert('danger', 'Une erreur est survenue. Veuillez réessayer.');
+                            console.error('Error:', error);
+                        });
+                    }
+                });
+            });
+        </script>
+    </th:block>
+</body>
+</html> 

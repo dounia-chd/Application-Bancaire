@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/base}">
+<head>
+    <title th:text="${transaction.id} + ' - Détails Transaction - eBanca Admin'">
+        Détails Transaction - eBanca Admin
+    </title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-exchange-alt me-2"></i>
+                <span th:text="${transaction.id}">ID Transaction</span>
+            </h1>
+            <div class="d-flex gap-2">
+                <a th:href="@{/admin/transactions}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                </a>
+            </div>
+        </div>
+
+        <!-- Transaction Information -->
+        <div class="row">
+            <!-- Transaction Details -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Informations de la Transaction
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Type</label>
+                            <p class="mb-0">
+                                <span th:class="${'badge bg-' + 
+                                    (transaction.type == T(com.ebanca.model.Transaction.Type).DEPOSIT ? 'success' : 
+                                     transaction.type == T(com.ebanca.model.Transaction.Type).WITHDRAWAL ? 'danger' : 
+                                     transaction.type == T(com.ebanca.model.Transaction.Type).TRANSFER ? 'info' : 'secondary')}"
+                                      th:text="${transaction.type}">
+                                    type
+                                </span>
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Montant</label>
+                            <p class="mb-0" th:text="${#numbers.formatDecimal(transaction.amount, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Statut</label>
+                            <p class="mb-0">
+                                <span th:class="${'badge bg-' + 
+                                    (transaction.status == T(com.ebanca.model.Transaction.Status).COMPLETED ? 'success' : 
+                                     transaction.status == T(com.ebanca.model.Transaction.Status).PENDING ? 'warning' : 'danger')}"
+                                      th:text="${transaction.status}">
+                                    status
+                                </span>
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Description</label>
+                            <p class="mb-0" th:text="${transaction.description}">description</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Date de création</label>
+                            <p class="mb-0" th:text="${#temporals.format(transaction.createdAt, 'dd/MM/yyyy HH:mm')}">date</p>
+                        </div>
+                        <div class="mb-3" th:if="${transaction.updatedAt != null}">
+                            <label class="form-label text-muted">Dernière mise à jour</label>
+                            <p class="mb-0" th:text="${#temporals.format(transaction.updatedAt, 'dd/MM/yyyy HH:mm')}">date</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Information -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-wallet me-2"></i>Informations du Compte
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Compte source</label>
+                            <p class="mb-0">
+                                <a th:href="@{/admin/accounts/{id}(id=${transaction.sourceAccount.id})}" class="text-decoration-none">
+                                    <span th:text="${transaction.sourceAccount.accountNumber + ' - ' + transaction.sourceAccount.user.firstName + ' ' + transaction.sourceAccount.user.lastName}">
+                                        account
+                                    </span>
+                                </a>
+                            </p>
+                        </div>
+                        <div class="mb-3" th:if="${transaction.type == T(com.ebanca.model.Transaction.Type).TRANSFER}">
+                            <label class="form-label text-muted">Compte destinataire</label>
+                            <p class="mb-0">
+                                <a th:href="@{/admin/accounts/{id}(id=${transaction.targetAccount.id})}" class="text-decoration-none">
+                                    <span th:text="${transaction.targetAccount.accountNumber + ' - ' + transaction.targetAccount.user.firstName + ' ' + transaction.targetAccount.user.lastName}">
+                                        account
+                                    </span>
+                                </a>
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Solde avant transaction</label>
+                            <p class="mb-0" th:text="${#numbers.formatDecimal(transaction.balanceBefore, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Solde après transaction</label>
+                            <p class="mb-0" th:text="${#numbers.formatDecimal(transaction.balanceAfter, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>Historique des Modifications
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Statut</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="history : ${transactionHistory}">
+                                <td th:text="${#temporals.format(history.createdAt, 'dd/MM/yyyy HH:mm')}">date</td>
+                                <td>
+                                    <span th:class="${'badge bg-' + 
+                                        (history.type == T(com.ebanca.model.TransactionHistory.Type).CREATED ? 'primary' : 
+                                         history.type == T(com.ebanca.model.TransactionHistory.Type).UPDATED ? 'info' : 
+                                         history.type == T(com.ebanca.model.TransactionHistory.Type).REVERSED ? 'danger' : 'secondary')}"
+                                          th:text="${history.type}">
+                                        type
+                                    </span>
+                                </td>
+                                <td>
+                                    <span th:class="${'badge bg-' + 
+                                        (history.status == T(com.ebanca.model.Transaction.Status).COMPLETED ? 'success' : 
+                                         history.status == T(com.ebanca.model.Transaction.Status).PENDING ? 'warning' : 'danger')}"
+                                          th:text="${history.status}">
+                                        status
+                                    </span>
+                                </td>
+                                <td th:text="${history.description}">description</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(transactionHistory)}">
+                                <td colspan="4" class="text-center py-4">
+                                    <i class="fas fa-history fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted mb-0">Aucun historique disponible</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex gap-2">
+                    <button th:if="${transaction.status == T(com.ebanca.model.Transaction.Status).PENDING}"
+                            th:data-href="@{/admin/transactions/{id}/reverse(id=${transaction.id})}"
+                            class="btn btn-outline-danger btn-reverse-transaction">
+                        <i class="fas fa-undo me-2"></i>Annuler la transaction
+                    </button>
+                    <button th:if="${transaction.status == T(com.ebanca.model.Transaction.Status).PENDING}"
+                            th:data-href="@{/admin/transactions/{id}/complete(id=${transaction.id})}"
+                            class="btn btn-outline-success btn-complete-transaction">
+                        <i class="fas fa-check me-2"></i>Compléter la transaction
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional JavaScript -->
+    <th:block layout:fragment="additionalJs">
+        <script th:inline="javascript">
+            // Handle transaction actions
+            document.querySelectorAll('.btn-reverse-transaction, .btn-complete-transaction').forEach(button => {
+                button.addEventListener('click', function() {
+                    const url = this.dataset.href;
+                    const action = this.classList.contains('btn-reverse-transaction') ? 'annuler' : 'compléter';
+                    
+                    if (confirm(`Êtes-vous sûr de vouloir ${action} cette transaction ?`)) {
+                        showLoading();
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            hideLoading();
+                            if (data.success) {
+                                showAlert('success', data.message);
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                showAlert('danger', data.message);
+                            }
+                        })
+                        .catch(error => {
+                            hideLoading();
+                            showAlert('danger', 'Une erreur est survenue. Veuillez réessayer.');
+                            console.error('Error:', error);
+                        });
+                    }
+                });
+            });
+        </script>
+    </th:block>
+</body>
+</html> 

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/base}">
+<head>
+    <title>Gestion des Comptes - eBanca Admin</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-wallet me-2"></i>Gestion des Comptes
+            </h1>
+            <a th:href="@{/admin/accounts/create}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Nouveau Compte
+            </a>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/admin/accounts/search}" method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" class="form-control" name="query" th:value="${param.query}"
+                                   placeholder="Rechercher par numéro de compte ou propriétaire...">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" name="type">
+                            <option value="">Type de compte</option>
+                            <option th:each="type : ${T(com.ebanca.model.Account.Type).values()}"
+                                    th:value="${type}" th:text="${type}"
+                                    th:selected="${param.type != null and param.type[0] == type.name()}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" name="status">
+                            <option value="">Statut</option>
+                            <option th:each="status : ${T(com.ebanca.model.Account.Status).values()}"
+                                    th:value="${status}" th:text="${status}"
+                                    th:selected="${param.status != null and param.status[0] == status.name()}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" name="sort">
+                            <option value="">Trier par</option>
+                            <option value="balance,desc" th:selected="${param.sort != null and param.sort[0] == 'balance,desc'}">
+                                Solde décroissant
+                            </option>
+                            <option value="balance,asc" th:selected="${param.sort != null and param.sort[0] == 'balance,asc'}">
+                                Solde croissant
+                            </option>
+                            <option value="createdAt,desc" th:selected="${param.sort != null and param.sort[0] == 'createdAt,desc'}">
+                                Plus récent
+                            </option>
+                            <option value="createdAt,asc" th:selected="${param.sort != null and param.sort[0] == 'createdAt,asc'}">
+                                Plus ancien
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter me-2"></i>Filtrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Accounts Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Numéro</th>
+                                <th>Propriétaire</th>
+                                <th>Type</th>
+                                <th>Solde</th>
+                                <th>Statut</th>
+                                <th>Date de création</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="account : ${accounts}">
+                                <td th:text="${account.accountNumber}">number</td>
+                                <td>
+                                    <a th:href="@{/admin/users/{id}(id=${account.user.id})}" class="text-decoration-none">
+                                        <span th:text="${account.user.firstName + ' ' + account.user.lastName}">owner</span>
+                                    </a>
+                                </td>
+                                <td>
+                                    <span th:class="${'badge bg-' + 
+                                        (account.type == T(com.ebanca.model.Account.Type).CHECKING ? 'primary' : 
+                                         account.type == T(com.ebanca.model.Account.Type).SAVINGS ? 'success' : 'info')}"
+                                          th:text="${account.type}">
+                                        type
+                                    </span>
+                                </td>
+                                <td th:text="${#numbers.formatDecimal(account.balance, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</td>
+                                <td>
+                                    <span th:class="${'badge bg-' + 
+                                        (account.status == T(com.ebanca.model.Account.Status).ACTIVE ? 'success' : 
+                                         account.status == T(com.ebanca.model.Account.Status).FROZEN ? 'warning' : 'danger')}"
+                                          th:text="${account.status}">
+                                        status
+                                    </span>
+                                </td>
+                                <td th:text="${#temporals.format(account.createdAt, 'dd/MM/yyyy')}">date</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a th:href="@{/admin/accounts/{id}(id=${account.id})}" 
+                                           class="btn btn-sm btn-outline-primary"
+                                           data-bs-toggle="tooltip"
+                                           title="Voir détails">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a th:href="@{/admin/accounts/{id}/edit(id=${account.id})}" 
+                                           class="btn btn-sm btn-outline-secondary"
+                                           data-bs-toggle="tooltip"
+                                           title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button th:if="${account.status == T(com.ebanca.model.Account.Status).ACTIVE}"
+                                                th:data-href="@{/admin/accounts/{id}/freeze(id=${account.id})}"
+                                                class="btn btn-sm btn-outline-warning btn-freeze-account"
+                                                data-bs-toggle="tooltip"
+                                                title="Geler">
+                                            <i class="fas fa-snowflake"></i>
+                                        </button>
+                                        <button th:if="${account.status == T(com.ebanca.model.Account.Status).FROZEN}"
+                                                th:data-href="@{/admin/accounts/{id}/unfreeze(id=${account.id})}"
+                                                class="btn btn-sm btn-outline-success btn-unfreeze-account"
+                                                data-bs-toggle="tooltip"
+                                                title="Dégeler">
+                                            <i class="fas fa-fire"></i>
+                                        </button>
+                                        <button th:if="${account.status != T(com.ebanca.model.Account.Status).CLOSED}"
+                                                th:data-href="@{/admin/accounts/{id}/close(id=${account.id})}"
+                                                class="btn btn-sm btn-outline-danger btn-close-account"
+                                                data-bs-toggle="tooltip"
+                                                title="Clôturer">
+                                            <i class="fas fa-times-circle"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(accounts)}">
+                                <td colspan="7" class="text-center py-4">
+                                    <i class="fas fa-wallet fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted mb-0">Aucun compte trouvé</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div class="text-muted">
+                        Affichage de <span th:text="${accounts.size()}">0</span> compte(s)
+                    </div>
+                    <nav th:if="${totalPages > 1}">
+                        <ul class="pagination mb-0">
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                                <a class="page-link" th:href="@{/admin/accounts(page=${currentPage - 1}, size=${pageSize}, sort=${sort})}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                                th:classappend="${currentPage == i} ? 'active'">
+                                <a class="page-link" th:href="@{/admin/accounts(page=${i}, size=${pageSize}, sort=${sort})}"
+                                   th:text="${i + 1}">1</a>
+                            </li>
+                            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                                <a class="page-link" th:href="@{/admin/accounts(page=${currentPage + 1}, size=${pageSize}, sort=${sort})}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional JavaScript -->
+    <th:block layout:fragment="additionalJs">
+        <script th:inline="javascript">
+            // Handle account actions
+            document.querySelectorAll('.btn-freeze-account, .btn-unfreeze-account, .btn-close-account').forEach(button => {
+                button.addEventListener('click', function() {
+                    const url = this.dataset.href;
+                    const action = this.classList.contains('btn-freeze-account') ? 'geler' :
+                                this.classList.contains('btn-unfreeze-account') ? 'dégeler' : 'clôturer';
+                    
+                    if (confirm(`Êtes-vous sûr de vouloir ${action} ce compte ?`)) {
+                        showLoading();
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            hideLoading();
+                            if (data.success) {
+                                showAlert('success', data.message);
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                showAlert('danger', data.message);
+                            }
+                        })
+                        .catch(error => {
+                            hideLoading();
+                            showAlert('danger', 'Une erreur est survenue. Veuillez réessayer.');
+                            console.error('Error:', error);
+                        });
+                    }
+                });
+            });
+        </script>
+    </th:block>
+</body>
+</html> 

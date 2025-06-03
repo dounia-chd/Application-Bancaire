@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/base}">
+<head>
+    <title>Gestion des Utilisateurs - eBanca Admin</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-users me-2"></i>Gestion des Utilisateurs
+            </h1>
+            <a th:href="@{/admin/users/create}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Nouvel Utilisateur
+            </a>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/admin/users/search}" method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <div class="search-bar">
+                            <i class="fas fa-search"></i>
+                            <input type="text" class="form-control search-input" name="query" 
+                                   th:value="${param.query}" placeholder="Rechercher un utilisateur...">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="role">
+                            <option value="">Tous les rôles</option>
+                            <option th:each="role : ${T(com.ebanca.model.User.Role).values()}"
+                                    th:value="${role}" th:text="${role}"
+                                    th:selected="${param.role != null and param.role[0] == role.name()}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="status">
+                            <option value="">Tous les statuts</option>
+                            <option th:each="status : ${T(com.ebanca.model.User.Status).values()}"
+                                    th:value="${status}" th:text="${status}"
+                                    th:selected="${param.status != null and param.status[0] == status.name()}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter me-2"></i>Filtrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <a href="#" class="sort-button text-decoration-none text-dark" data-sort="id">
+                                        ID
+                                        <i class="fas fa-sort ms-1"></i>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="#" class="sort-button text-decoration-none text-dark" data-sort="username">
+                                        Nom d'utilisateur
+                                        <i class="fas fa-sort ms-1"></i>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="#" class="sort-button text-decoration-none text-dark" data-sort="email">
+                                        Email
+                                        <i class="fas fa-sort ms-1"></i>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="#" class="sort-button text-decoration-none text-dark" data-sort="role">
+                                        Rôle
+                                        <i class="fas fa-sort ms-1"></i>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="#" class="sort-button text-decoration-none text-dark" data-sort="status">
+                                        Statut
+                                        <i class="fas fa-sort ms-1"></i>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="#" class="sort-button text-decoration-none text-dark" data-sort="createdAt">
+                                        Date de création
+                                        <i class="fas fa-sort ms-1"></i>
+                                    </a>
+                                </th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="user : ${users}">
+                                <td th:text="${user.id}"></td>
+                                <td th:text="${user.username}"></td>
+                                <td th:text="${user.email}"></td>
+                                <td>
+                                    <span th:class="${'badge bg-' + (user.role == T(com.ebanca.model.User.Role).ADMIN ? 'danger' : 'primary')}"
+                                          th:text="${user.role}">
+                                    </span>
+                                </td>
+                                <td>
+                                    <span th:class="${'badge bg-' + 
+                                        (user.status == T(com.ebanca.model.User.Status).ACTIVE ? 'success' : 
+                                         user.status == T(com.ebanca.model.User.Status).INACTIVE ? 'warning' : 
+                                         user.status == T(com.ebanca.model.User.Status).LOCKED ? 'danger' : 'secondary')}"
+                                          th:text="${user.status}">
+                                    </span>
+                                </td>
+                                <td th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a th:href="@{/admin/users/{id}/edit(id=${user.id})}" 
+                                           class="btn btn-sm btn-outline-primary" 
+                                           data-bs-toggle="tooltip" 
+                                           title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button th:if="${user.status == T(com.ebanca.model.User.Status).ACTIVE}"
+                                                th:data-href="@{/admin/users/{id}/disable(id=${user.id})}"
+                                                class="btn btn-sm btn-outline-warning btn-disable"
+                                                data-bs-toggle="tooltip"
+                                                title="Désactiver">
+                                            <i class="fas fa-ban"></i>
+                                        </button>
+                                        <button th:if="${user.status == T(com.ebanca.model.User.Status).INACTIVE}"
+                                                th:data-href="@{/admin/users/{id}/enable(id=${user.id})}"
+                                                class="btn btn-sm btn-outline-success btn-enable"
+                                                data-bs-toggle="tooltip"
+                                                title="Activer">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button th:if="${user.status != T(com.ebanca.model.User.Status).LOCKED}"
+                                                th:data-href="@{/admin/users/{id}/lock(id=${user.id})}"
+                                                class="btn btn-sm btn-outline-danger btn-lock"
+                                                data-bs-toggle="tooltip"
+                                                title="Verrouiller">
+                                            <i class="fas fa-lock"></i>
+                                        </button>
+                                        <button th:if="${user.status == T(com.ebanca.model.User.Status).LOCKED}"
+                                                th:data-href="@{/admin/users/{id}/unlock(id=${user.id})}"
+                                                class="btn btn-sm btn-outline-info btn-unlock"
+                                                data-bs-toggle="tooltip"
+                                                title="Déverrouiller">
+                                            <i class="fas fa-unlock"></i>
+                                        </button>
+                                        <button th:data-href="@{/admin/users/{id}/delete(id=${user.id})}"
+                                                class="btn btn-sm btn-outline-danger btn-delete"
+                                                data-bs-toggle="tooltip"
+                                                title="Supprimer">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(users)}">
+                                <td colspan="7" class="text-center py-4">
+                                    <i class="fas fa-search fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted mb-0">Aucun utilisateur trouvé</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div th:if="${totalPages > 1}" class="d-flex justify-content-between align-items-center mt-4">
+                    <div class="text-muted">
+                        Affichage de <span th:text="${users.size()}"></span> sur 
+                        <span th:text="${totalElements}"></span> utilisateurs
+                    </div>
+                    <nav>
+                        <ul class="pagination mb-0">
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                                <a class="page-link" th:href="@{${#httpServletRequest.requestURI}(page=${currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, direction=${direction})}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                                th:classappend="${currentPage == i} ? 'active'">
+                                <a class="page-link" th:href="@{${#httpServletRequest.requestURI}(page=${i}, size=${pageSize}, sortBy=${sortBy}, direction=${direction})}"
+                                   th:text="${i + 1}">
+                                </a>
+                            </li>
+                            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                                <a class="page-link" th:href="@{${#httpServletRequest.requestURI}(page=${currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, direction=${direction})}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional JavaScript -->
+    <th:block layout:fragment="additionalJs">
+        <script th:inline="javascript">
+            // Handle status change buttons
+            document.querySelectorAll('.btn-disable, .btn-enable, .btn-lock, .btn-unlock').forEach(button => {
+                button.addEventListener('click', function() {
+                    const url = this.dataset.href;
+                    const action = this.classList.contains('btn-disable') ? 'désactiver' :
+                                 this.classList.contains('btn-enable') ? 'activer' :
+                                 this.classList.contains('btn-lock') ? 'verrouiller' : 'déverrouiller';
+                    
+                    if (confirm(`Êtes-vous sûr de vouloir ${action} cet utilisateur ?`)) {
+                        showLoading();
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            hideLoading();
+                            if (data.success) {
+                                showAlert('success', data.message);
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                showAlert('danger', data.message);
+                            }
+                        })
+                        .catch(error => {
+                            hideLoading();
+                            showAlert('danger', 'Une erreur est survenue. Veuillez réessayer.');
+                            console.error('Error:', error);
+                        });
+                    }
+                });
+            });
+        </script>
+    </th:block>
+</body>
+</html> 

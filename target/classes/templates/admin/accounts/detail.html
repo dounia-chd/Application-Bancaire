@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/base}">
+<head>
+    <title th:text="${account.accountNumber} + ' - Détails Compte - eBanca Admin'">
+        Détails Compte - eBanca Admin
+    </title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-wallet me-2"></i>
+                <span th:text="${account.accountNumber}">Numéro de compte</span>
+            </h1>
+            <div class="d-flex gap-2">
+                <a th:href="@{/admin/accounts/{id}/edit(id=${account.id})}" class="btn btn-primary">
+                    <i class="fas fa-edit me-2"></i>Modifier
+                </a>
+                <a th:href="@{/admin/accounts}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                </a>
+            </div>
+        </div>
+
+        <!-- Account Information -->
+        <div class="row">
+            <!-- Account Details -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Informations du Compte
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Propriétaire</label>
+                            <p class="mb-0">
+                                <a th:href="@{/admin/users/{id}(id=${account.user.id})}" class="text-decoration-none">
+                                    <span th:text="${account.user.firstName + ' ' + account.user.lastName}">owner</span>
+                                </a>
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Type de compte</label>
+                            <p class="mb-0">
+                                <span th:class="${'badge bg-' + 
+                                    (account.type == T(com.ebanca.model.Account.Type).CHECKING ? 'primary' : 
+                                     account.type == T(com.ebanca.model.Account.Type).SAVINGS ? 'success' : 'info')}"
+                                      th:text="${account.type}">
+                                    type
+                                </span>
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Solde actuel</label>
+                            <p class="mb-0" th:text="${#numbers.formatDecimal(account.balance, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Statut</label>
+                            <p class="mb-0">
+                                <span th:class="${'badge bg-' + 
+                                    (account.status == T(com.ebanca.model.Account.Status).ACTIVE ? 'success' : 
+                                     account.status == T(com.ebanca.model.Account.Status).FROZEN ? 'warning' : 'danger')}"
+                                      th:text="${account.status}">
+                                    status
+                                </span>
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Date de création</label>
+                            <p class="mb-0" th:text="${#temporals.format(account.createdAt, 'dd/MM/yyyy HH:mm')}">date</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Settings -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-cog me-2"></i>Paramètres du Compte
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Limite de découvert</label>
+                            <p class="mb-0" th:text="${account.overdraftLimit != null ? #numbers.formatDecimal(account.overdraftLimit, 1, 'COMMA', 2, 'POINT') + ' €' : 'Non définie'}">
+                                limit
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Taux d'intérêt</label>
+                            <p class="mb-0" th:text="${account.interestRate != null ? #numbers.formatDecimal(account.interestRate, 1, 'COMMA', 2, 'POINT') + '%' : 'Non défini'}">
+                                rate
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Dernière mise à jour</label>
+                            <p class="mb-0" th:text="${#temporals.format(account.updatedAt, 'dd/MM/yyyy HH:mm')}">date</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-bolt me-2"></i>Actions Rapides
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button th:if="${account.status == T(com.ebanca.model.Account.Status).ACTIVE}"
+                                    class="btn btn-outline-primary"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#depositModal">
+                                <i class="fas fa-plus-circle me-2"></i>Dépôt
+                            </button>
+                            <button th:if="${account.status == T(com.ebanca.model.Account.Status).ACTIVE}"
+                                    class="btn btn-outline-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#withdrawModal">
+                                <i class="fas fa-minus-circle me-2"></i>Retrait
+                            </button>
+                            <button th:if="${account.status == T(com.ebanca.model.Account.Status).ACTIVE}"
+                                    class="btn btn-outline-info"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#transferModal">
+                                <i class="fas fa-exchange-alt me-2"></i>Transfert
+                            </button>
+                            <button th:if="${account.status == T(com.ebanca.model.Account.Status).ACTIVE}"
+                                    th:data-href="@{/admin/accounts/{id}/freeze(id=${account.id})}"
+                                    class="btn btn-outline-warning btn-freeze-account">
+                                <i class="fas fa-snowflake me-2"></i>Geler le compte
+                            </button>
+                            <button th:if="${account.status == T(com.ebanca.model.Account.Status).FROZEN}"
+                                    th:data-href="@{/admin/accounts/{id}/unfreeze(id=${account.id})}"
+                                    class="btn btn-outline-success btn-unfreeze-account">
+                                <i class="fas fa-fire me-2"></i>Dégeler le compte
+                            </button>
+                            <button th:if="${account.status != T(com.ebanca.model.Account.Status).CLOSED}"
+                                    th:data-href="@{/admin/accounts/{id}/close(id=${account.id})}"
+                                    class="btn btn-outline-danger btn-close-account">
+                                <i class="fas fa-times-circle me-2"></i>Clôturer le compte
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exchange-alt me-2"></i>Transactions Récentes
+                </h5>
+                <a th:href="@{/admin/transactions(accountId=${account.id})}" class="btn btn-sm btn-outline-primary">
+                    Voir toutes les transactions
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Montant</th>
+                                <th>Description</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="transaction : ${recentTransactions}">
+                                <td th:text="${#temporals.format(transaction.createdAt, 'dd/MM/yyyy HH:mm')}">date</td>
+                                <td>
+                                    <span th:class="${'badge bg-' + 
+                                        (transaction.type == T(com.ebanca.model.Transaction.Type).DEPOSIT ? 'success' : 
+                                         transaction.type == T(com.ebanca.model.Transaction.Type).WITHDRAWAL ? 'danger' : 
+                                         transaction.type == T(com.ebanca.model.Transaction.Type).TRANSFER ? 'info' : 'secondary')}"
+                                          th:text="${transaction.type}">
+                                        type
+                                    </span>
+                                </td>
+                                <td th:text="${#numbers.formatDecimal(transaction.amount, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</td>
+                                <td th:text="${transaction.description}">description</td>
+                                <td>
+                                    <span th:class="${'badge bg-' + 
+                                        (transaction.status == T(com.ebanca.model.Transaction.Status).COMPLETED ? 'success' : 
+                                         transaction.status == T(com.ebanca.model.Transaction.Status).PENDING ? 'warning' : 'danger')}"
+                                          th:text="${transaction.status}">
+                                        status
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a th:href="@{/admin/transactions/{id}(id=${transaction.id})}" 
+                                           class="btn btn-sm btn-outline-primary"
+                                           data-bs-toggle="tooltip"
+                                           title="Voir détails">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button th:if="${transaction.status == T(com.ebanca.model.Transaction.Status).PENDING}"
+                                                th:data-href="@{/admin/transactions/{id}/reverse(id=${transaction.id})}"
+                                                class="btn btn-sm btn-outline-danger btn-reverse-transaction"
+                                                data-bs-toggle="tooltip"
+                                                title="Annuler">
+                                            <i class="fas fa-undo"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(recentTransactions)}">
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="fas fa-exchange-alt fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted mb-0">Aucune transaction récente</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deposit Modal -->
+    <div class="modal fade" id="depositModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/admin/accounts/{id}/deposit(id=${account.id})}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Effectuer un dépôt</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Montant</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="amount" name="amount"
+                                       step="0.01" min="0.01" required>
+                                <span class="input-group-text">€</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="description" name="description"
+                                   maxlength="200" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Confirmer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdraw Modal -->
+    <div class="modal fade" id="withdrawModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/admin/accounts/{id}/withdraw(id=${account.id})}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Effectuer un retrait</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <div class="mb-3">
+                            <label for="withdrawAmount" class="form-label">Montant</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="withdrawAmount" name="amount"
+                                       step="0.01" min="0.01" required>
+                                <span class="input-group-text">€</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="withdrawDescription" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="withdrawDescription" name="description"
+                                   maxlength="200" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Confirmer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Modal -->
+    <div class="modal fade" id="transferModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/admin/accounts/transfer}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Effectuer un transfert</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <input type="hidden" name="sourceAccountId" th:value="${account.id}" />
+                        <div class="mb-3">
+                            <label for="targetAccountId" class="form-label">Compte destinataire</label>
+                            <select class="form-select" id="targetAccountId" name="targetAccountId" required>
+                                <option value="">Sélectionner un compte</option>
+                                <option th:each="targetAccount : ${targetAccounts}"
+                                        th:value="${targetAccount.id}"
+                                        th:text="${targetAccount.accountNumber + ' - ' + targetAccount.user.firstName + ' ' + targetAccount.user.lastName}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="transferAmount" class="form-label">Montant</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="transferAmount" name="amount"
+                                       step="0.01" min="0.01" required>
+                                <span class="input-group-text">€</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="transferDescription" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="transferDescription" name="description"
+                                   maxlength="200" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Confirmer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional JavaScript -->
+    <th:block layout:fragment="additionalJs">
+        <script th:inline="javascript">
+            // Handle account actions
+            document.querySelectorAll('.btn-freeze-account, .btn-unfreeze-account, .btn-close-account').forEach(button => {
+                button.addEventListener('click', function() {
+                    const url = this.dataset.href;
+                    const action = this.classList.contains('btn-freeze-account') ? 'geler' :
+                                this.classList.contains('btn-unfreeze-account') ? 'dégeler' : 'clôturer';
+                    
+                    if (confirm(`Êtes-vous sûr de vouloir ${action} ce compte ?`)) {
+                        showLoading();
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            hideLoading();
+                            if (data.success) {
+                                showAlert('success', data.message);
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                showAlert('danger', data.message);
+                            }
+                        })
+                        .catch(error => {
+                            hideLoading();
+                            showAlert('danger', 'Une erreur est survenue. Veuillez réessayer.');
+                            console.error('Error:', error);
+                        });
+                    }
+                });
+            });
+
+            // Handle transaction reversal
+            document.querySelectorAll('.btn-reverse-transaction').forEach(button => {
+                button.addEventListener('click', function() {
+                    const url = this.dataset.href;
+                    
+                    if (confirm('Êtes-vous sûr de vouloir annuler cette transaction ?')) {
+                        showLoading();
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            hideLoading();
+                            if (data.success) {
+                                showAlert('success', data.message);
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                showAlert('danger', data.message);
+                            }
+                        })
+                        .catch(error => {
+                            hideLoading();
+                            showAlert('danger', 'Une erreur est survenue. Veuillez réessayer.');
+                            console.error('Error:', error);
+                        });
+                    }
+                });
+            });
+        </script>
+    </th:block>
+</body>
+</html> 

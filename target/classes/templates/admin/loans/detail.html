@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/base}">
+<head>
+    <title th:text="${loan.id} + ' - Détails Prêt - eBanca Admin'">
+        Détails Prêt - eBanca Admin
+    </title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-hand-holding-usd me-2"></i>
+                <span th:text="${loan.id}">ID Prêt</span>
+            </h1>
+            <div class="d-flex gap-2">
+                <a th:href="@{/admin/loans}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                </a>
+            </div>
+        </div>
+
+        <!-- Loan Information -->
+        <div class="row">
+            <!-- Loan Details -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Informations du Prêt
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Type</label>
+                            <p class="mb-0">
+                                <span th:class="${'badge bg-' + 
+                                    (loan.type == T(com.ebanca.model.Loan.Type).PERSONAL ? 'primary' : 
+                                     loan.type == T(com.ebanca.model.Loan.Type).MORTGAGE ? 'info' : 
+                                     loan.type == T(com.ebanca.model.Loan.Type).AUTO ? 'success' : 'secondary')}"
+                                      th:text="${loan.type}">
+                                    type
+                                </span>
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Montant</label>
+                            <p class="mb-0" th:text="${#numbers.formatDecimal(loan.amount, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Taux d'intérêt</label>
+                            <p class="mb-0" th:text="${#numbers.formatDecimal(loan.interestRate, 1, 'COMMA', 2, 'POINT') + ' %'}">0.00 %</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Durée</label>
+                            <p class="mb-0" th:text="${loan.duration + ' mois'}">0 mois</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Statut</label>
+                            <p class="mb-0">
+                                <span th:class="${'badge bg-' + 
+                                    (loan.status == T(com.ebanca.model.Loan.Status).APPROVED ? 'success' : 
+                                     loan.status == T(com.ebanca.model.Loan.Status).PENDING ? 'warning' : 
+                                     loan.status == T(com.ebanca.model.Loan.Status).REJECTED ? 'danger' : 
+                                     loan.status == T(com.ebanca.model.Loan.Status).PAID ? 'info' : 'secondary')}"
+                                      th:text="${loan.status}">
+                                    status
+                                </span>
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Date de création</label>
+                            <p class="mb-0" th:text="${#temporals.format(loan.createdAt, 'dd/MM/yyyy HH:mm')}">date</p>
+                        </div>
+                        <div class="mb-3" th:if="${loan.updatedAt != null}">
+                            <label class="form-label text-muted">Dernière mise à jour</label>
+                            <p class="mb-0" th:text="${#temporals.format(loan.updatedAt, 'dd/MM/yyyy HH:mm')}">date</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Client Information -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-user me-2"></i>Informations du Client
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Client</label>
+                            <p class="mb-0">
+                                <a th:href="@{/admin/users/{id}(id=${loan.user.id})}" class="text-decoration-none">
+                                    <span th:text="${loan.user.firstName + ' ' + loan.user.lastName}">client</span>
+                                </a>
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Email</label>
+                            <p class="mb-0" th:text="${loan.user.email}">email</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Téléphone</label>
+                            <p class="mb-0" th:text="${loan.user.phone}">phone</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Adresse</label>
+                            <p class="mb-0" th:text="${loan.user.address}">address</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loan Summary -->
+        <div class="row">
+            <div class="col-md-3 mb-4">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h6 class="card-title">Montant total à rembourser</h6>
+                        <h3 class="mb-0" th:text="${#numbers.formatDecimal(loan.totalAmount, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h6 class="card-title">Montant déjà remboursé</h6>
+                        <h3 class="mb-0" th:text="${#numbers.formatDecimal(loan.paidAmount, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h6 class="card-title">Montant restant</h6>
+                        <h3 class="mb-0" th:text="${#numbers.formatDecimal(loan.remainingAmount, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <h6 class="card-title">Prochain paiement</h6>
+                        <h3 class="mb-0" th:text="${#numbers.formatDecimal(loan.nextPaymentAmount, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</h3>
+                        <small th:text="${#temporals.format(loan.nextPaymentDate, 'dd/MM/yyyy')}">date</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment History -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>Historique des Paiements
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Montant</th>
+                                <th>Type</th>
+                                <th>Statut</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="payment : ${payments}">
+                                <td th:text="${#temporals.format(payment.date, 'dd/MM/yyyy HH:mm')}">date</td>
+                                <td th:text="${#numbers.formatDecimal(payment.amount, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</td>
+                                <td>
+                                    <span th:class="${'badge bg-' + 
+                                        (payment.type == T(com.ebanca.model.LoanPayment.Type).REGULAR ? 'primary' : 
+                                         payment.type == T(com.ebanca.model.LoanPayment.Type).EARLY ? 'success' : 'secondary')}"
+                                          th:text="${payment.type}">
+                                        type
+                                    </span>
+                                </td>
+                                <td>
+                                    <span th:class="${'badge bg-' + 
+                                        (payment.status == T(com.ebanca.model.LoanPayment.Status).COMPLETED ? 'success' : 
+                                         payment.status == T(com.ebanca.model.LoanPayment.Status).PENDING ? 'warning' : 'danger')}"
+                                          th:text="${payment.status}">
+                                        status
+                                    </span>
+                                </td>
+                                <td th:text="${payment.description}">description</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a th:href="@{/admin/transactions/{id}(id=${payment.transaction.id})}" 
+                                           class="btn btn-sm btn-outline-primary"
+                                           data-bs-toggle="tooltip"
+                                           title="Voir transaction">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button th:if="${payment.status == T(com.ebanca.model.LoanPayment.Status).PENDING}"
+                                                th:data-href="@{/admin/loans/payments/{id}/cancel(id=${payment.id})}"
+                                                class="btn btn-sm btn-outline-danger btn-cancel-payment"
+                                                data-bs-toggle="tooltip"
+                                                title="Annuler">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(payments)}">
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="fas fa-history fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted mb-0">Aucun paiement effectué</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex gap-2">
+                    <button th:if="${loan.status == T(com.ebanca.model.Loan.Status).PENDING}"
+                            th:data-href="@{/admin/loans/{id}/approve(id=${loan.id})}"
+                            class="btn btn-outline-success btn-approve-loan">
+                        <i class="fas fa-check me-2"></i>Approuver le prêt
+                    </button>
+                    <button th:if="${loan.status == T(com.ebanca.model.Loan.Status).PENDING}"
+                            th:data-href="@{/admin/loans/{id}/reject(id=${loan.id})}"
+                            class="btn btn-outline-danger btn-reject-loan">
+                        <i class="fas fa-times me-2"></i>Rejeter le prêt
+                    </button>
+                    <button th:if="${loan.status == T(com.ebanca.model.Loan.Status).APPROVED}"
+                            class="btn btn-outline-primary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#paymentModal">
+                        <i class="fas fa-money-bill me-2"></i>Enregistrer un paiement
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/admin/loans/{id}/payments(id=${loan.id})}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Enregistrer un paiement</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Montant</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="amount" step="0.01" required
+                                       th:max="${loan.remainingAmount}">
+                                <span class="input-group-text">€</span>
+                            </div>
+                            <small class="text-muted">Montant restant à payer : <span th:text="${#numbers.formatDecimal(loan.remainingAmount, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</span></small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Type de paiement</label>
+                            <select class="form-select" name="type" required>
+                                <option th:each="type : ${T(com.ebanca.model.LoanPayment.Type).values()}"
+                                        th:value="${type}" th:text="${type}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional JavaScript -->
+    <th:block layout:fragment="additionalJs">
+        <script th:inline="javascript">
+            // Handle loan actions
+            document.querySelectorAll('.btn-approve-loan, .btn-reject-loan').forEach(button => {
+                button.addEventListener('click', function() {
+                    const url = this.dataset.href;
+                    const action = this.classList.contains('btn-approve-loan') ? 'approuver' : 'rejeter';
+                    
+                    if (confirm(`Êtes-vous sûr de vouloir ${action} ce prêt ?`)) {
+                        showLoading();
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            hideLoading();
+                            if (data.success) {
+                                showAlert('success', data.message);
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                showAlert('danger', data.message);
+                            }
+                        })
+                        .catch(error => {
+                            hideLoading();
+                            showAlert('danger', 'Une erreur est survenue. Veuillez réessayer.');
+                            console.error('Error:', error);
+                        });
+                    }
+                });
+            });
+
+            // Handle payment cancellation
+            document.querySelectorAll('.btn-cancel-payment').forEach(button => {
+                button.addEventListener('click', function() {
+                    const url = this.dataset.href;
+                    
+                    if (confirm('Êtes-vous sûr de vouloir annuler ce paiement ?')) {
+                        showLoading();
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            hideLoading();
+                            if (data.success) {
+                                showAlert('success', data.message);
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                showAlert('danger', data.message);
+                            }
+                        })
+                        .catch(error => {
+                            hideLoading();
+                            showAlert('danger', 'Une erreur est survenue. Veuillez réessayer.');
+                            console.error('Error:', error);
+                        });
+                    }
+                });
+            });
+
+            // Initialize tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        </script>
+    </th:block>
+</body>
+</html> 

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/base}">
+<head>
+    <title>Prêts - eBanca Admin</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-hand-holding-usd me-2"></i>Prêts
+            </h1>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#exportModal">
+                    <i class="fas fa-file-export me-2"></i>Exporter
+                </button>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/admin/loans}" method="get" class="row g-3">
+                    <!-- Search -->
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="search" th:value="${param.search}"
+                                   placeholder="Rechercher par ID, client...">
+                            <button class="btn btn-outline-secondary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="col-md-2">
+                        <select class="form-select" name="type">
+                            <option value="">Type</option>
+                            <option th:each="type : ${T(com.ebanca.model.Loan.Type).values()}"
+                                    th:value="${type}" th:text="${type}"
+                                    th:selected="${param.type != null and param.type[0] == type.name()}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" name="status">
+                            <option value="">Statut</option>
+                            <option th:each="status : ${T(com.ebanca.model.Loan.Status).values()}"
+                                    th:value="${status}" th:text="${status}"
+                                    th:selected="${param.status != null and param.status[0] == status.name()}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" name="userId">
+                            <option value="">Client</option>
+                            <option th:each="user : ${users}"
+                                    th:value="${user.id}"
+                                    th:text="${user.firstName + ' ' + user.lastName}"
+                                    th:selected="${param.userId != null and param.userId[0] == user.id.toString()}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter me-2"></i>Filtrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Loans Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <a th:href="@{/admin/loans(page=${page},size=${size},sort=id,${param.search != null ? 'search=' + param.search : ''},${param.type != null ? 'type=' + param.type : ''},${param.status != null ? 'status=' + param.status : ''},${param.userId != null ? 'userId=' + param.userId : ''})}"
+                                       class="text-decoration-none text-dark">
+                                        ID
+                                        <i class="fas fa-sort ms-1" th:if="${sort == null or sort != 'id'}"></i>
+                                        <i class="fas fa-sort-up ms-1" th:if="${sort == 'id' and direction == 'asc'}"></i>
+                                        <i class="fas fa-sort-down ms-1" th:if="${sort == 'id' and direction == 'desc'}"></i>
+                                    </a>
+                                </th>
+                                <th>Client</th>
+                                <th>
+                                    <a th:href="@{/admin/loans(page=${page},size=${size},sort=type,${param.search != null ? 'search=' + param.search : ''},${param.type != null ? 'type=' + param.type : ''},${param.status != null ? 'status=' + param.status : ''},${param.userId != null ? 'userId=' + param.userId : ''})}"
+                                       class="text-decoration-none text-dark">
+                                        Type
+                                        <i class="fas fa-sort ms-1" th:if="${sort == null or sort != 'type'}"></i>
+                                        <i class="fas fa-sort-up ms-1" th:if="${sort == 'type' and direction == 'asc'}"></i>
+                                        <i class="fas fa-sort-down ms-1" th:if="${sort == 'type' and direction == 'desc'}"></i>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a th:href="@{/admin/loans(page=${page},size=${size},sort=amount,${param.search != null ? 'search=' + param.search : ''},${param.type != null ? 'type=' + param.type : ''},${param.status != null ? 'status=' + param.status : ''},${param.userId != null ? 'userId=' + param.userId : ''})}"
+                                       class="text-decoration-none text-dark">
+                                        Montant
+                                        <i class="fas fa-sort ms-1" th:if="${sort == null or sort != 'amount'}"></i>
+                                        <i class="fas fa-sort-up ms-1" th:if="${sort == 'amount' and direction == 'asc'}"></i>
+                                        <i class="fas fa-sort-down ms-1" th:if="${sort == 'amount' and direction == 'desc'}"></i>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a th:href="@{/admin/loans(page=${page},size=${size},sort=interestRate,${param.search != null ? 'search=' + param.search : ''},${param.type != null ? 'type=' + param.type : ''},${param.status != null ? 'status=' + param.status : ''},${param.userId != null ? 'userId=' + param.userId : ''})}"
+                                       class="text-decoration-none text-dark">
+                                        Taux
+                                        <i class="fas fa-sort ms-1" th:if="${sort == null or sort != 'interestRate'}"></i>
+                                        <i class="fas fa-sort-up ms-1" th:if="${sort == 'interestRate' and direction == 'asc'}"></i>
+                                        <i class="fas fa-sort-down ms-1" th:if="${sort == 'interestRate' and direction == 'desc'}"></i>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a th:href="@{/admin/loans(page=${page},size=${size},sort=duration,${param.search != null ? 'search=' + param.search : ''},${param.type != null ? 'type=' + param.type : ''},${param.status != null ? 'status=' + param.status : ''},${param.userId != null ? 'userId=' + param.userId : ''})}"
+                                       class="text-decoration-none text-dark">
+                                        Durée
+                                        <i class="fas fa-sort ms-1" th:if="${sort == null or sort != 'duration'}"></i>
+                                        <i class="fas fa-sort-up ms-1" th:if="${sort == 'duration' and direction == 'asc'}"></i>
+                                        <i class="fas fa-sort-down ms-1" th:if="${sort == 'duration' and direction == 'desc'}"></i>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a th:href="@{/admin/loans(page=${page},size=${size},sort=status,${param.search != null ? 'search=' + param.search : ''},${param.type != null ? 'type=' + param.type : ''},${param.status != null ? 'status=' + param.status : ''},${param.userId != null ? 'userId=' + param.userId : ''})}"
+                                       class="text-decoration-none text-dark">
+                                        Statut
+                                        <i class="fas fa-sort ms-1" th:if="${sort == null or sort != 'status'}"></i>
+                                        <i class="fas fa-sort-up ms-1" th:if="${sort == 'status' and direction == 'asc'}"></i>
+                                        <i class="fas fa-sort-down ms-1" th:if="${sort == 'status' and direction == 'desc'}"></i>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a th:href="@{/admin/loans(page=${page},size=${size},sort=createdAt,${param.search != null ? 'search=' + param.search : ''},${param.type != null ? 'type=' + param.type : ''},${param.status != null ? 'status=' + param.status : ''},${param.userId != null ? 'userId=' + param.userId : ''})}"
+                                       class="text-decoration-none text-dark">
+                                        Date
+                                        <i class="fas fa-sort ms-1" th:if="${sort == null or sort != 'createdAt'}"></i>
+                                        <i class="fas fa-sort-up ms-1" th:if="${sort == 'createdAt' and direction == 'asc'}"></i>
+                                        <i class="fas fa-sort-down ms-1" th:if="${sort == 'createdAt' and direction == 'desc'}"></i>
+                                    </a>
+                                </th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="loan : ${loans}">
+                                <td th:text="${loan.id}">id</td>
+                                <td>
+                                    <a th:href="@{/admin/users/{id}(id=${loan.user.id})}" class="text-decoration-none">
+                                        <span th:text="${loan.user.firstName + ' ' + loan.user.lastName}">client</span>
+                                    </a>
+                                </td>
+                                <td>
+                                    <span th:class="${'badge bg-' + 
+                                        (loan.type == T(com.ebanca.model.Loan.Type).PERSONAL ? 'primary' : 
+                                         loan.type == T(com.ebanca.model.Loan.Type).MORTGAGE ? 'info' : 
+                                         loan.type == T(com.ebanca.model.Loan.Type).AUTO ? 'success' : 'secondary')}"
+                                          th:text="${loan.type}">
+                                        type
+                                    </span>
+                                </td>
+                                <td th:text="${#numbers.formatDecimal(loan.amount, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</td>
+                                <td th:text="${#numbers.formatDecimal(loan.interestRate, 1, 'COMMA', 2, 'POINT') + ' %'}">0.00 %</td>
+                                <td th:text="${loan.duration + ' mois'}">0 mois</td>
+                                <td>
+                                    <span th:class="${'badge bg-' + 
+                                        (loan.status == T(com.ebanca.model.Loan.Status).APPROVED ? 'success' : 
+                                         loan.status == T(com.ebanca.model.Loan.Status).PENDING ? 'warning' : 
+                                         loan.status == T(com.ebanca.model.Loan.Status).REJECTED ? 'danger' : 
+                                         loan.status == T(com.ebanca.model.Loan.Status).PAID ? 'info' : 'secondary')}"
+                                          th:text="${loan.status}">
+                                        status
+                                    </span>
+                                </td>
+                                <td th:text="${#temporals.format(loan.createdAt, 'dd/MM/yyyy HH:mm')}">date</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a th:href="@{/admin/loans/{id}(id=${loan.id})}" 
+                                           class="btn btn-sm btn-outline-primary"
+                                           data-bs-toggle="tooltip"
+                                           title="Voir détails">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button th:if="${loan.status == T(com.ebanca.model.Loan.Status).PENDING}"
+                                                th:data-href="@{/admin/loans/{id}/approve(id=${loan.id})}"
+                                                class="btn btn-sm btn-outline-success btn-approve-loan"
+                                                data-bs-toggle="tooltip"
+                                                title="Approuver">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button th:if="${loan.status == T(com.ebanca.model.Loan.Status).PENDING}"
+                                                th:data-href="@{/admin/loans/{id}/reject(id=${loan.id})}"
+                                                class="btn btn-sm btn-outline-danger btn-reject-loan"
+                                                data-bs-toggle="tooltip"
+                                                title="Rejeter">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(loans)}">
+                                <td colspan="9" class="text-center py-4">
+                                    <i class="fas fa-hand-holding-usd fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted mb-0">Aucun prêt trouvé</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div class="text-muted">
+                        Affichage de <span th:text="${loans.size()}">0</span> prêt(s) sur <span th:text="${totalElements}">0</span>
+                    </div>
+                    <nav th:if="${totalPages > 1}">
+                        <ul class="pagination mb-0">
+                            <li class="page-item" th:classappend="${page == 0} ? 'disabled'">
+                                <a class="page-link" th:href="@{/admin/loans(page=${page - 1},size=${size},sort=${sort},direction=${direction},${param.search != null ? 'search=' + param.search : ''},${param.type != null ? 'type=' + param.type : ''},${param.status != null ? 'status=' + param.status : ''},${param.userId != null ? 'userId=' + param.userId : ''})}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                                th:classappend="${i == page} ? 'active'">
+                                <a class="page-link" th:href="@{/admin/loans(page=${i},size=${size},sort=${sort},direction=${direction},${param.search != null ? 'search=' + param.search : ''},${param.type != null ? 'type=' + param.type : ''},${param.status != null ? 'status=' + param.status : ''},${param.userId != null ? 'userId=' + param.userId : ''})}"
+                                   th:text="${i + 1}">1</a>
+                            </li>
+                            <li class="page-item" th:classappend="${page == totalPages - 1} ? 'disabled'">
+                                <a class="page-link" th:href="@{/admin/loans(page=${page + 1},size=${size},sort=${sort},direction=${direction},${param.search != null ? 'search=' + param.search : ''},${param.type != null ? 'type=' + param.type : ''},${param.status != null ? 'status=' + param.status : ''},${param.userId != null ? 'userId=' + param.userId : ''})}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal fade" id="exportModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/admin/loans/export}" method="get">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Exporter les prêts</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Format</label>
+                            <select class="form-select" name="format" required>
+                                <option value="CSV">CSV</option>
+                                <option value="EXCEL">Excel</option>
+                                <option value="PDF">PDF</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Période</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="date" class="form-control" name="startDate" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="date" class="form-control" name="endDate" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Type</label>
+                            <select class="form-select" name="type">
+                                <option value="">Tous</option>
+                                <option th:each="type : ${T(com.ebanca.model.Loan.Type).values()}"
+                                        th:value="${type}" th:text="${type}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Statut</label>
+                            <select class="form-select" name="status">
+                                <option value="">Tous</option>
+                                <option th:each="status : ${T(com.ebanca.model.Loan.Status).values()}"
+                                        th:value="${status}" th:text="${status}">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Exporter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional JavaScript -->
+    <th:block layout:fragment="additionalJs">
+        <script th:inline="javascript">
+            // Handle loan actions
+            document.querySelectorAll('.btn-approve-loan, .btn-reject-loan').forEach(button => {
+                button.addEventListener('click', function() {
+                    const url = this.dataset.href;
+                    const action = this.classList.contains('btn-approve-loan') ? 'approuver' : 'rejeter';
+                    
+                    if (confirm(`Êtes-vous sûr de vouloir ${action} ce prêt ?`)) {
+                        showLoading();
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            hideLoading();
+                            if (data.success) {
+                                showAlert('success', data.message);
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                showAlert('danger', data.message);
+                            }
+                        })
+                        .catch(error => {
+                            hideLoading();
+                            showAlert('danger', 'Une erreur est survenue. Veuillez réessayer.');
+                            console.error('Error:', error);
+                        });
+                    }
+                });
+            });
+
+            // Initialize tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        </script>
+    </th:block>
+</body>
+</html> 

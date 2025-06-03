@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/base}">
+<head>
+    <title th:text="${user.id == null ? 'Nouvel Utilisateur' : 'Modifier Utilisateur'} + ' - eBanca Admin'">
+        Formulaire Utilisateur - eBanca Admin
+    </title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-user me-2"></i>
+                <span th:text="${user.id == null ? 'Nouvel Utilisateur' : 'Modifier Utilisateur'}">
+                    Formulaire Utilisateur
+                </span>
+            </h1>
+            <a th:href="@{/admin/users}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+            </a>
+        </div>
+
+        <!-- User Form -->
+        <div class="card">
+            <div class="card-body">
+                <form th:action="${user.id == null ? '/admin/users/create' : '/admin/users/' + user.id + '/edit'}"
+                      th:object="${user}" method="post" class="needs-validation" novalidate>
+                    
+                    <!-- CSRF Token -->
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    
+                    <!-- Personal Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="card-title mb-3">
+                                <i class="fas fa-user-circle me-2"></i>Informations Personnelles
+                            </h5>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">Nom d'utilisateur</label>
+                            <input type="text" class="form-control" id="username" th:field="*{username}"
+                                   th:classappend="${#fields.hasErrors('username')} ? 'is-invalid'"
+                                   required minlength="3" maxlength="50">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('username')}" 
+                                 th:errors="*{username}">
+                                Erreur de validation
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" th:field="*{email}"
+                                   th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
+                                   required>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" 
+                                 th:errors="*{email}">
+                                Erreur de validation
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="firstName" class="form-label">Prénom</label>
+                            <input type="text" class="form-control" id="firstName" th:field="*{firstName}"
+                                   th:classappend="${#fields.hasErrors('firstName')} ? 'is-invalid'"
+                                   required maxlength="50">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('firstName')}" 
+                                 th:errors="*{firstName}">
+                                Erreur de validation
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="lastName" class="form-label">Nom</label>
+                            <input type="text" class="form-control" id="lastName" th:field="*{lastName}"
+                                   th:classappend="${#fields.hasErrors('lastName')} ? 'is-invalid'"
+                                   required maxlength="50">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('lastName')}" 
+                                 th:errors="*{lastName}">
+                                Erreur de validation
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Settings -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="card-title mb-3">
+                                <i class="fas fa-shield-alt me-2"></i>Paramètres de Sécurité
+                            </h5>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="password" class="form-label">
+                                Mot de passe
+                                <span th:if="${user.id != null}" class="text-muted">(laisser vide pour ne pas modifier)</span>
+                            </label>
+                            <input type="password" class="form-control" id="password" name="password"
+                                   th:required="${user.id == null}" minlength="8">
+                            <div class="form-text" th:if="${user.id == null}">
+                                Le mot de passe doit contenir au moins 8 caractères
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="confirmPassword" class="form-label">Confirmer le mot de passe</label>
+                            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword"
+                                   th:required="${user.id == null}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="role" class="form-label">Rôle</label>
+                            <select class="form-select" id="role" th:field="*{role}"
+                                    th:classappend="${#fields.hasErrors('role')} ? 'is-invalid'"
+                                    required>
+                                <option value="">Sélectionner un rôle</option>
+                                <option th:each="role : ${T(com.ebanca.model.User.Role).values()}"
+                                        th:value="${role}" th:text="${role}">
+                                </option>
+                            </select>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('role')}" 
+                                 th:errors="*{role}">
+                                Erreur de validation
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="status" class="form-label">Statut</label>
+                            <select class="form-select" id="status" th:field="*{status}"
+                                    th:classappend="${#fields.hasErrors('status')} ? 'is-invalid'"
+                                    required>
+                                <option value="">Sélectionner un statut</option>
+                                <option th:each="status : ${T(com.ebanca.model.User.Status).values()}"
+                                        th:value="${status}" th:text="${status}">
+                                </option>
+                            </select>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('status')}" 
+                                 th:errors="*{status}">
+                                Erreur de validation
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="card-title mb-3">
+                                <i class="fas fa-address-card me-2"></i>Informations de Contact
+                            </h5>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label">Téléphone</label>
+                            <input type="tel" class="form-control" id="phone" th:field="*{phone}"
+                                   th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid'"
+                                   pattern="[0-9]{10}">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('phone')}" 
+                                 th:errors="*{phone}">
+                                Erreur de validation
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="address" class="form-label">Adresse</label>
+                            <input type="text" class="form-control" id="address" th:field="*{address}"
+                                   th:classappend="${#fields.hasErrors('address')} ? 'is-invalid'"
+                                   maxlength="200">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('address')}" 
+                                 th:errors="*{address}">
+                                Erreur de validation
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-end gap-2">
+                        <a th:href="@{/admin/users}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            <span th:text="${user.id == null ? 'Créer' : 'Enregistrer'}">
+                                Enregistrer
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional JavaScript -->
+    <th:block layout:fragment="additionalJs">
+        <script th:inline="javascript">
+            // Password confirmation validation
+            const password = document.getElementById('password');
+            const confirmPassword = document.getElementById('confirmPassword');
+            
+            function validatePassword() {
+                if (password.value !== confirmPassword.value) {
+                    confirmPassword.setCustomValidity('Les mots de passe ne correspondent pas');
+                } else {
+                    confirmPassword.setCustomValidity('');
+                }
+            }
+            
+            password.addEventListener('change', validatePassword);
+            confirmPassword.addEventListener('keyup', validatePassword);
+            
+            // Form validation
+            const form = document.querySelector('.needs-validation');
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        </script>
+    </th:block>
+</body>
+</html> 

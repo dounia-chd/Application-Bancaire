@@ -1,0 +1,6 @@
+com\ebanca\service\AccountServiceTest.class
+com\ebanca\service\UserServiceTest.class
+com\ebanca\integration\UserIntegrationTest.class
+com\ebanca\integration\AccountIntegrationTest.class
+com\ebanca\integration\TransactionIntegrationTest.class
+com\ebanca\service\TransactionServiceTest.class

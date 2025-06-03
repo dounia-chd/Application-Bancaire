@@ -1,0 +1,1 @@
+// Cette classe a été déplacée vers com.ebanca.config.JwtProperties 

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/base}">
+<head>
+    <title>Transactions - eBanca Admin</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-exchange-alt me-2"></i>Transactions
+            </h1>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#exportModal">
+                    <i class="fas fa-file-export me-2"></i>Exporter
+                </button>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/admin/transactions}" method="get" class="row g-3">
+                    <!-- Search -->
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="search" th:value="${param.search}"
+                                   placeholder="Rechercher par ID, description...">
+                            <button class="btn btn-outline-secondary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="col-md-2">
+                        <select class="form-select" name="type">
+                            <option value="">Type</option>
+                            <option th:each="type : ${T(com.ebanca.model.Transaction.Type).values()}"
+                                    th:value="${type}" th:text="${type}"
+                                    th:selected="${param.type != null and param.type[0] == type.name()}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" name="status">
+                            <option value="">Statut</option>
+                            <option th:each="status : ${T(com.ebanca.model.Transaction.Status).values()}"
+                                    th:value="${status}" th:text="${status}"
+                                    th:selected="${param.status != null and param.status[0] == status.name()}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" name="accountId">
+                            <option value="">Compte</option>
+                            <option th:each="account : ${accounts}"
+                                    th:value="${account.id}"
+                                    th:text="${account.accountNumber + ' - ' + account.user.firstName + ' ' + account.user.lastName}"
+                                    th:selected="${param.accountId != null and param.accountId[0] == account.id.toString()}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter me-2"></i>Filtrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <a th:href="@{/admin/transactions(page=${page},size=${size},sort=id,${param.search != null ? 'search=' + param.search : ''},${param.type != null ? 'type=' + param.type : ''},${param.status != null ? 'status=' + param.status : ''},${param.accountId != null ? 'accountId=' + param.accountId : ''})}"
+                                       class="text-decoration-none text-dark">
+                                        ID
+                                        <i class="fas fa-sort ms-1" th:if="${sort == null or sort != 'id'}"></i>
+                                        <i class="fas fa-sort-up ms-1" th:if="${sort == 'id' and direction == 'asc'}"></i>
+                                        <i class="fas fa-sort-down ms-1" th:if="${sort == 'id' and direction == 'desc'}"></i>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a th:href="@{/admin/transactions(page=${page},size=${size},sort=type,${param.search != null ? 'search=' + param.search : ''},${param.type != null ? 'type=' + param.type : ''},${param.status != null ? 'status=' + param.status : ''},${param.accountId != null ? 'accountId=' + param.accountId : ''})}"
+                                       class="text-decoration-none text-dark">
+                                        Type
+                                        <i class="fas fa-sort ms-1" th:if="${sort == null or sort != 'type'}"></i>
+                                        <i class="fas fa-sort-up ms-1" th:if="${sort == 'type' and direction == 'asc'}"></i>
+                                        <i class="fas fa-sort-down ms-1" th:if="${sort == 'type' and direction == 'desc'}"></i>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a th:href="@{/admin/transactions(page=${page},size=${size},sort=amount,${param.search != null ? 'search=' + param.search : ''},${param.type != null ? 'type=' + param.type : ''},${param.status != null ? 'status=' + param.status : ''},${param.accountId != null ? 'accountId=' + param.accountId : ''})}"
+                                       class="text-decoration-none text-dark">
+                                        Montant
+                                        <i class="fas fa-sort ms-1" th:if="${sort == null or sort != 'amount'}"></i>
+                                        <i class="fas fa-sort-up ms-1" th:if="${sort == 'amount' and direction == 'asc'}"></i>
+                                        <i class="fas fa-sort-down ms-1" th:if="${sort == 'amount' and direction == 'desc'}"></i>
+                                    </a>
+                                </th>
+                                <th>Compte</th>
+                                <th>Description</th>
+                                <th>
+                                    <a th:href="@{/admin/transactions(page=${page},size=${size},sort=status,${param.search != null ? 'search=' + param.search : ''},${param.type != null ? 'type=' + param.type : ''},${param.status != null ? 'status=' + param.status : ''},${param.accountId != null ? 'accountId=' + param.accountId : ''})}"
+                                       class="text-decoration-none text-dark">
+                                        Statut
+                                        <i class="fas fa-sort ms-1" th:if="${sort == null or sort != 'status'}"></i>
+                                        <i class="fas fa-sort-up ms-1" th:if="${sort == 'status' and direction == 'asc'}"></i>
+                                        <i class="fas fa-sort-down ms-1" th:if="${sort == 'status' and direction == 'desc'}"></i>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a th:href="@{/admin/transactions(page=${page},size=${size},sort=createdAt,${param.search != null ? 'search=' + param.search : ''},${param.type != null ? 'type=' + param.type : ''},${param.status != null ? 'status=' + param.status : ''},${param.accountId != null ? 'accountId=' + param.accountId : ''})}"
+                                       class="text-decoration-none text-dark">
+                                        Date
+                                        <i class="fas fa-sort ms-1" th:if="${sort == null or sort != 'createdAt'}"></i>
+                                        <i class="fas fa-sort-up ms-1" th:if="${sort == 'createdAt' and direction == 'asc'}"></i>
+                                        <i class="fas fa-sort-down ms-1" th:if="${sort == 'createdAt' and direction == 'desc'}"></i>
+                                    </a>
+                                </th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="transaction : ${transactions}">
+                                <td th:text="${transaction.id}">id</td>
+                                <td>
+                                    <span th:class="${'badge bg-' + 
+                                        (transaction.type == T(com.ebanca.model.Transaction.Type).DEPOSIT ? 'success' : 
+                                         transaction.type == T(com.ebanca.model.Transaction.Type).WITHDRAWAL ? 'danger' : 
+                                         transaction.type == T(com.ebanca.model.Transaction.Type).TRANSFER ? 'info' : 'secondary')}"
+                                          th:text="${transaction.type}">
+                                        type
+                                    </span>
+                                </td>
+                                <td th:text="${#numbers.formatDecimal(transaction.amount, 1, 'COMMA', 2, 'POINT') + ' €'}">0.00 €</td>
+                                <td>
+                                    <a th:href="@{/admin/accounts/{id}(id=${transaction.sourceAccount.id})}" class="text-decoration-none">
+                                        <span th:text="${transaction.sourceAccount.accountNumber + ' - ' + transaction.sourceAccount.user.firstName + ' ' + transaction.sourceAccount.user.lastName}">
+                                            account
+                                        </span>
+                                    </a>
+                                </td>
+                                <td th:text="${transaction.description}">description</td>
+                                <td>
+                                    <span th:class="${'badge bg-' + 
+                                        (transaction.status == T(com.ebanca.model.Transaction.Status).COMPLETED ? 'success' : 
+                                         transaction.status == T(com.ebanca.model.Transaction.Status).PENDING ? 'warning' : 'danger')}"
+                                          th:text="${transaction.status}">
+                                        status
+                                    </span>
+                                </td>
+                                <td th:text="${#temporals.format(transaction.createdAt, 'dd/MM/yyyy HH:mm')}">date</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a th:href="@{/admin/transactions/{id}(id=${transaction.id})}" 
+                                           class="btn btn-sm btn-outline-primary"
+                                           data-bs-toggle="tooltip"
+                                           title="Voir détails">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button th:if="${transaction.status == T(com.ebanca.model.Transaction.Status).PENDING}"
+                                                th:data-href="@{/admin/transactions/{id}/reverse(id=${transaction.id})}"
+                                                class="btn btn-sm btn-outline-danger btn-reverse-transaction"
+                                                data-bs-toggle="tooltip"
+                                                title="Annuler">
+                                            <i class="fas fa-undo"></i>
+                                        </button>
+                                        <button th:if="${transaction.status == T(com.ebanca.model.Transaction.Status).PENDING}"
+                                                th:data-href="@{/admin/transactions/{id}/complete(id=${transaction.id})}"
+                                                class="btn btn-sm btn-outline-success btn-complete-transaction"
+                                                data-bs-toggle="tooltip"
+                                                title="Compléter">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(transactions)}">
+                                <td colspan="8" class="text-center py-4">
+                                    <i class="fas fa-exchange-alt fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted mb-0">Aucune transaction trouvée</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div class="text-muted">
+                        Affichage de <span th:text="${transactions.size()}">0</span> transaction(s) sur <span th:text="${totalElements}">0</span>
+                    </div>
+                    <nav th:if="${totalPages > 1}">
+                        <ul class="pagination mb-0">
+                            <li class="page-item" th:classappend="${page == 0} ? 'disabled'">
+                                <a class="page-link" th:href="@{/admin/transactions(page=${page - 1},size=${size},sort=${sort},direction=${direction},${param.search != null ? 'search=' + param.search : ''},${param.type != null ? 'type=' + param.type : ''},${param.status != null ? 'status=' + param.status : ''},${param.accountId != null ? 'accountId=' + param.accountId : ''})}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                                th:classappend="${i == page} ? 'active'">
+                                <a class="page-link" th:href="@{/admin/transactions(page=${i},size=${size},sort=${sort},direction=${direction},${param.search != null ? 'search=' + param.search : ''},${param.type != null ? 'type=' + param.type : ''},${param.status != null ? 'status=' + param.status : ''},${param.accountId != null ? 'accountId=' + param.accountId : ''})}"
+                                   th:text="${i + 1}">1</a>
+                            </li>
+                            <li class="page-item" th:classappend="${page == totalPages - 1} ? 'disabled'">
+                                <a class="page-link" th:href="@{/admin/transactions(page=${page + 1},size=${size},sort=${sort},direction=${direction},${param.search != null ? 'search=' + param.search : ''},${param.type != null ? 'type=' + param.type : ''},${param.status != null ? 'status=' + param.status : ''},${param.accountId != null ? 'accountId=' + param.accountId : ''})}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal fade" id="exportModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/admin/transactions/export}" method="get">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Exporter les transactions</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Format</label>
+                            <select class="form-select" name="format" required>
+                                <option value="CSV">CSV</option>
+                                <option value="EXCEL">Excel</option>
+                                <option value="PDF">PDF</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Période</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="date" class="form-control" name="startDate" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="date" class="form-control" name="endDate" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Type</label>
+                            <select class="form-select" name="type">
+                                <option value="">Tous</option>
+                                <option th:each="type : ${T(com.ebanca.model.Transaction.Type).values()}"
+                                        th:value="${type}" th:text="${type}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Statut</label>
+                            <select class="form-select" name="status">
+                                <option value="">Tous</option>
+                                <option th:each="status : ${T(com.ebanca.model.Transaction.Status).values()}"
+                                        th:value="${status}" th:text="${status}">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Exporter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional JavaScript -->
+    <th:block layout:fragment="additionalJs">
+        <script th:inline="javascript">
+            // Handle transaction actions
+            document.querySelectorAll('.btn-reverse-transaction, .btn-complete-transaction').forEach(button => {
+                button.addEventListener('click', function() {
+                    const url = this.dataset.href;
+                    const action = this.classList.contains('btn-reverse-transaction') ? 'annuler' : 'compléter';
+                    
+                    if (confirm(`Êtes-vous sûr de vouloir ${action} cette transaction ?`)) {
+                        showLoading();
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            hideLoading();
+                            if (data.success) {
+                                showAlert('success', data.message);
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                showAlert('danger', data.message);
+                            }
+                        })
+                        .catch(error => {
+                            hideLoading();
+                            showAlert('danger', 'Une erreur est survenue. Veuillez réessayer.');
+                            console.error('Error:', error);
+                        });
+                    }
+                });
+            });
+
+            // Initialize tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        </script>
+    </th:block>
+</body>
+</html> 
