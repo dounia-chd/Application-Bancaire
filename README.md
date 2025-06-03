@@ -11,6 +11,7 @@ Le projet est construit avec :
 - Base de données : H2 (développement) / PostgreSQL (production)
 
 ## Fonctionnalités
+<img width="767" alt="eBanca" src="https://github.com/user-attachments/assets/ef4c00d0-bf0d-43dc-a533-d3766fe99fde" />
 
 ### Espace Client (Angular)
 - Création de compte client avec vérification d'identité
